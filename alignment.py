@@ -1,71 +1,45 @@
-
 #alignment.py
 import cv2
 import numpy as np
 
-
-#Contains the function(s) to read keypoints and perform either rigid (affine) or non-rigid registration. USE NONRIGID
-#Must produce and save aligned.jpg (aligned image2.jpg).
-
-#read images
-def read_image(image1: str ,image2: str):
-    img1 = cv2.imread(image1)     #cv2.imread(image1, cv.IMREAD_GRAYSCALE) for grayscale.     #DIMENSIONS: print('image height is', image1.shape[0]), print('image width is',image1.shape[1])
-    img2 = cv2.imread(image2)
-
-    if img1 is None or img2 is None:
-        print("can't read {image1} or {image2}")
-        return None
-    return img1, img2, 
-
-    #IMAGE TESTING
-    #cv2.imshow('image1', img1) #show
-    #cv2.waitKey(0)  #wait for a key press indefinitely to exit
-    #cv2.destroyAllWindows()
-
-def read_keypoints(filename):
-    with open(filename, 'r') as file:
-        content = file.read().strip()
+#https://www.geeksforgeeks.org/image-registration-using-opencv-python/
+def aligner_homography(image1, image2, kp1, kp2):
+    #check if keypoints are provided or of same size (must or unaligned)
+    if not kp1.size or not kp2.size or kp1.shape != kp2.shape:
+        print("No keypoints provided. Resizing image2 to match image1 dimensions.")
+        aligned = cv2.resize(image2, (image1.shape[1], image1.shape[0]))
+        cv2.imwrite('aligned.jpg', aligned) 
+        return aligned
     
-    # If file is empty, return an empty array
-    if not content:
-        return np.array([], dtype=np.float32)
+    num_points = min(kp1.shape[0], kp2.shape[0]) #they are both the same size so this is redundant.
+    p1 = kp1[:num_points].astype(np.float32)
+    p2 = kp2[:num_points].astype(np.float32)
     
-    # Remove the outer square brackets if present
-    if content[0] == '[' and content[-1] == ']':
-        content = content[1:-1]
+    H, mask = cv2.findHomography(p2, p1, cv2.RANSAC)     #get homography that maps points from image2 (p2) to image1 (p1)
     
-    # Split the content by the delimiter between keypoints.
-    # This assumes keypoints are separated by ")," 
-    kp_strings = content.split("),")
-    
-    kp_list = []
-    for kp_str in kp_strings:
-        # Remove any remaining parentheses and whitespace
-        kp_str = kp_str.replace("(", "").replace(")", "").strip()
-        if kp_str:
-            parts = kp_str.split(',')
-            # Expecting two parts for x and y
-            x = float(parts[0].strip())
-            y = float(parts[1].strip())
-            kp_list.append((x, y))
-    
-    return np.array(kp_list, dtype=np.float32)
+    #warp image2 using the homography matrix so it aligns with image1.
+    height, width = image1.shape[:2]
+    aligned = cv2.warpPerspective(image2, H, (width, height))
+    cv2.imwrite('aligned.jpg', aligned)
+    return aligned
 
+#https://www.geeksforgeeks.org/python-opencv-affine-transformation/?ref=header_outind
+def aligner_affine(image1, image2, kp1, kp2):
+    #check for keypoints; if missing, resize image2 to image1's size.
+    if not kp1.size or not kp2.size or kp1.shape != kp2.shape:
+        print("Not enough keypoints. Resizing image2 to match image1.")
+        aligned = cv2.resize(image2, (image1.shape[1], image1.shape[0]))
+        cv2.imwrite('aligned.jpg', aligned)
+        return aligned
+    #use min number of keypoints if the arrays differ in size.
+    num_points = min(kp1.shape[0], kp2.shape[0])
+    p1 = kp1[:num_points]  # Destination keypoints from image1.
+    p2 = kp2[:num_points]  # Source keypoints from image2.
+    #est affine transformation from source (p2) to destination (p1) keypoints.
+    M, inliers = cv2.estimateAffinePartial2D(p2, p1)
+    #apply transformation to image2.
+    height, width = image1.shape[:2]
+    aligned = cv2.warpAffine(image2, M, (width, height))
+    cv2.imwrite('aligned.jpg', aligned)
+    return aligned
 
-
-def aligner(image1, image2, kp1, kp2):
-    if image1 is None or image2 is None:
-        print("Can't read image1 or image2")
-        return None
-
-    for key in kp1:
-        print(key)
-    # If there are no matches or insufficient matches, simply resize image2 to match image1
-    '''
-    if matches is None or len(matches) < 3:
-        print("Not enough matches. Resizing image2 to match image1.")
-        image2_resized = cv2.resize(image2, (image1.shape[1], image1.shape[0]))
-        cv2.imwrite('aligned.jpg', image2_resized)
-        return image2_resized
-    '''
-  
