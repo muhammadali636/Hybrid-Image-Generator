@@ -41,7 +41,7 @@ def aligner_affine(image1, image2, kp1, kp2):
     if not kp1.size or not kp2.size or kp1.shape != kp2.shape:
         print("Not enough keypoints. Resizing image2 to match image1.")
         aligned = cv2.resize(image2, (image1.shape[1], image1.shape[0]))
-        cv2.imwrite('aligned.jpg', aligned)
+        cv2.imwrite('output_images/aligned.jpg', aligned)
         return aligned
     num_points = min(kp1.shape[0], kp2.shape[0])  #use min number of keypoints if the arrays differ in size. They are the same so this is redundant.
     p1 = kp1[:num_points]  #keypoints from image1.
@@ -51,7 +51,7 @@ def aligner_affine(image1, image2, kp1, kp2):
     #apply transformation to image2.
     height, width = image1.shape[:2]
     aligned = cv2.warpAffine(image2, M, (width, height))
-    cv2.imwrite('aligned.jpg', aligned)
+    cv2.imwrite('output_images/aligned.jpg', aligned)
     return aligned
 
 #homography alignment (nonrigid)  - referenced: https://www.geeksforgeeks.org/image-registration-using-opencv-python/. Doesnt work well, TODO: thin plate splines.
@@ -60,7 +60,7 @@ def aligner_homography(image1, image2, kp1, kp2):
     if not kp1.size or not kp2.size or kp1.shape != kp2.shape:
         print("No keypoints provided. Resizing image2 to match image1 dimensions.")
         aligned = cv2.resize(image2, (image1.shape[1], image1.shape[0]))
-        cv2.imwrite('aligned.jpg', aligned) 
+        cv2.imwrite('output_images/aligned.jpg', aligned) 
         return aligned
 
     #compute homography matrix
@@ -72,5 +72,5 @@ def aligner_homography(image1, image2, kp1, kp2):
     #warp image2 using homography matrix to align with image1
     height, width = image1.shape[:2]
     aligned = cv2.warpPerspective(image2, H, (width, height))
-    cv2.imwrite('aligned.jpg', aligned) #aligned img2.
+    cv2.imwrite('output_images/aligned.jpg', aligned) #aligned img2.
     return aligned

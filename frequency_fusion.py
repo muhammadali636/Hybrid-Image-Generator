@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from math import sqrt, exp
 
-#euclid distance between two points
+#euclid distance between two points 
 def distance(point1, point2):
     return sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
 
@@ -26,7 +26,7 @@ def gauss_high_pass(cutoff_frequency, image_shape):
     return 1 - np.exp(-squared_distance_from_center / (2 * cutoff_frequency ** 2))
 
 #make hybrid image by combining low frequencies from image1 and high frequencies from image2
-def frequency_hybrid_images(image1, image2, cutoff_frequency=50):
+def frequency_hybrid_images(image1, image2, cutoff_frequency=50): #cutoff_frequency = D0. 
     #fourier transform of image1 and shift zero frequency component to center (convert from spatial domain to frequency domain, center makes freq filter easier)
     fft_image1 = np.fft.fft2(image1) 
     fft_shifted_image1 = np.fft.fftshift(fft_image1)
@@ -44,11 +44,12 @@ def frequency_hybrid_images(image1, image2, cutoff_frequency=50):
     inverse_high_frequency_component = np.fft.ifft2(inverse_fft_shifted_high) 
     
     #combine low and high frequency components; weights can be adjusted to control each contribution
-    weight_low = 0.4
-    weight_high = 2
+    weight_low = 0.6
+    weight_high = 1.8
     hybrid_image = weight_low * np.abs(inverse_low_frequency_component) + weight_high * np.abs(inverse_high_frequency_component)
     
     #normalize hybrid image to the range 0 to 255 (displays require pixels in this range)
     normalized_hybrid_image = cv2.normalize(hybrid_image, None, 0, 255, cv2.NORM_MINMAX)
     hybrid_image_uint8 = normalized_hybrid_image.astype(np.uint8)
+    cv2.imwrite('output_images/frequency_hybrid.jpg', hybrid_image_uint8) #write frequency_hybrid to file.
     return hybrid_image_uint8

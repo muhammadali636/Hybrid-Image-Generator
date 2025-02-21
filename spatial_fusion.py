@@ -76,5 +76,5 @@ def spatial_hybrid(image1, image2, blend_width=200):
     
     #construct, save to file, and return final blended image
     hybrid_image = reconstruct_image_from_pyramid(blended_levels)
-    cv2.imwrite('spatial_hybrid.jpg', hybrid_image) #write spatial_hybrid image to file.
+    cv2.imwrite('output_images/spatial_hybrid.jpg', hybrid_image) #write spatial_hybrid image to file.
     return hybrid_image
