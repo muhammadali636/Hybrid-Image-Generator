@@ -90,19 +90,19 @@ In `frequency_fusion.py`, I created a hybrid by merging the low frequencies from
                   weight_high * np.abs(inverse_high_frequency_component))
 ### Spatial-Domain Blending (Gaussian/Laplacian Pyramids)
 
-In `spatial_fusion.py`, I generated hybrid images by blending various resolutions using Laplacian pyramids, which reduces harsh seams:
+In `spatial_fusion.py`, I generated hybrid images by combining the low-frequency content of one image with the high-frequency details of another. This approach creates an image that appears differently when viewed from various distances:
 
 - **Gaussian Pyramids:**  
-  Each image was downsampled 5–6 times using `cv2.pyrDown`, halving the dimensions and retaining only coarse details at higher levels.
+  Each image was downsampled 4 times using `cv2.pyrDown`, capturing coarse details at the smallest scale.
 
 - **Laplacian Pyramids:**  
-  Formed by subtracting upsampled smaller images from the larger ones, revealing high-frequency edges.
+  Derived from the Gaussian pyramids by subtracting the upsampled lower-level images from the higher-resolution ones, these pyramids isolate high-frequency edges.
 
 - **Blending:**  
-  At each level, a horizontal mask was used to merge the images. An alpha parameter (0.65) adjusted the prominence of the cat’s details.
+  Instead of using a horizontal mask, the low-frequency component from the first image is combined with the high-frequency component from the second using weighted addition. An alpha parameter (0.07) adjusts the influence of the high-frequency details, balancing the overall image.
 
 - **Reconstruction:**  
-  The final hybrid image (`spatial_hybrid.jpg`) was reconstructed by upsampling and adding the blended pyramid levels in reverse order.
+  The final hybrid image (`spatial_hybrid.jpg`) is reconstructed by upsampling and adding the blended components, yielding an image that changes in appearance depending on the viewing distance.
 
 ### Observations
 
@@ -116,8 +116,8 @@ Good facial alignment was essential. Enlarging the cat image reduced some outlin
 
 ### Parameter Choices
 
-- **Spatial Pyramids:** Approximately 6 levels.
-- **Alpha (for spatial blending):** 0.65 (you can adjust this parameter in `spatial_fusion.py` to tweak the blending of facial features).
+- **Spatial Pyramids:** Approximately 4 levels. (you can adjust in `spatial_fusion.py`)
+- **Alpha (for spatial blending):** 0.34 (you can adjust this parameter in `spatial_fusion.py` to tweak the blending of facial features).
 - **FFT Cutoff (D0):** ~50 (tested range: 30–60).
 - **FFT Weights (for frequency blending):**  
   - `weight_low = 0.6`  
